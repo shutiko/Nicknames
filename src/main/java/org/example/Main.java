@@ -64,7 +64,7 @@ public class Main {
 
     }
 
-    // Функция - генерируем слова и пишем их в массив
+    // Функция - генерируем строки
     public static String generateText(String letters, int length) {
         Random random = new Random();
         StringBuilder text = new StringBuilder();
@@ -74,7 +74,7 @@ public class Main {
         return text.toString();
     }
 
-    //Функция - выбираем палиндромы и слова в составе которых одна буква, что тоже палиндромы
+    //Функция - выбираем палиндромы
     public static boolean isPalindrome(String text) {
         return text.equals(new StringBuilder(text).reverse().toString());
     }
