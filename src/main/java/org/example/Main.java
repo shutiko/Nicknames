@@ -1,5 +1,6 @@
 package org.example;
 
+
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -11,61 +12,47 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
         Random random = new Random();
-        int countStrings = 10_000;
+        int countStrings = 100_000;
         String[] texts = new String[countStrings];
         for (int i = 0; i < texts.length; i++) {
             texts[i] = generateText("abc", 3 + random.nextInt(3));
         }
         // Код 3 потоков
-        Thread thread3 = new Thread(() -> {
-            for (int i = 0; i < texts.length; i++) {
-                if (texts[i].length() == 3) {
-                    if (isLexicographic(texts[i])) {
-                        count3.getAndIncrement();
-                    } else if (isPalindrom(texts[i])) {
-                        count3.getAndIncrement();
-                    }
+        Thread palindrome = new Thread(() -> {
+            for (String text : texts) {
+                if (isPalindrome(text) && !isSameChar(text)) {
+                    incrementCounter(text.length());
                 }
             }
         }
         );
 
-        Thread thread4 = new Thread(() -> {
-            for (int i = 0; i < texts.length; i++) {
-                if (texts[i].length() == 4) {
-                    if (isLexicographic(texts[i])) {
-                        count4.getAndIncrement();
-                    } else if (isPalindrom(texts[i])) {
-                        count4.getAndIncrement();
-                    }
+        Thread sameChar = new Thread(() -> {
+            for (String text : texts) {
+                if (isSameChar(text)) {
+                    incrementCounter(text.length());
                 }
             }
-        }
-        );
+        });
 
-        Thread thread5 = new Thread(() -> {
-            for (int i = 0; i < texts.length; i++) {
-                if (texts[i].length() == 5) {
-                    if (isLexicographic(texts[i])) {
-                        count5.getAndIncrement();
-                    } else if (isPalindrom(texts[i])) {
-                        count5.getAndIncrement();
-                    }
+        Thread ascendingOrder = new Thread(() -> {
+            for (String text : texts) {
+                if (!isSameChar(text) && isLexicographic(text)) {
+                    incrementCounter(text.length());
                 }
             }
-        }
-        );
+        });
 
         // Запускаем потоки
-        thread3.start();
-        thread4.start();
-        thread5.start();
+        palindrome.start();
+        sameChar.start();
+        ascendingOrder.start();
 
         //Ждем пока потоки завершат работу
         try {
-            thread3.join();
-            thread4.join();
-            thread5.join();
+            palindrome.join();
+            sameChar.join();
+            ascendingOrder.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -88,31 +75,36 @@ public class Main {
     }
 
     //Функция - выбираем палиндромы и слова в составе которых одна буква, что тоже палиндромы
-    public static boolean isPalindrom(String text) {
-        boolean isPalindrom;
-        StringBuilder reverse = new StringBuilder();
-        String clean = text.replaceAll("\\s+", "").toLowerCase();
-        char[] charArray = clean.toCharArray();
-        for (int i = charArray.length - 1; i >= 0; i--) {
-            reverse.append(charArray[i]);
-        }
-        isPalindrom = (reverse.toString()).equals(clean);
-        return isPalindrom;
+    public static boolean isPalindrome(String text) {
+        return text.equals(new StringBuilder(text).reverse().toString());
     }
 
     //Функция - выбираем слова последовательность букв которых расположена лексикографически
     public static boolean isLexicographic(String text) {
-        String clean = text.replaceAll("\\s+", "").toLowerCase();
-        if (clean.charAt(0) == clean.charAt(clean.length() - 1)) {
-            return false;
-        } else {
-            for (int i = 0; i < clean.length() - 1; i++) {
-                if (clean.charAt(i) > clean.charAt(i + 1)) {
-                    return false;
-                }
-            }
+        for (int i = 1; i < text.length(); i++) {
+            if (text.charAt(i) < text.charAt(i - 1))
+                return false;
         }
         return true;
     }
 
+    //Функция - выбираем слова состоящие из одной буква
+    public static boolean isSameChar(String text) {
+        for (int i = 1; i < text.length(); i++) {
+            if (text.charAt(i) != text.charAt(i - 1))
+                return false;
+        }
+        return true;
+    }
+
+    //Функция - увеличения счетчиков
+    public static void incrementCounter(int textLength) {
+        if (textLength == 3) {
+            count3.getAndIncrement();
+        } else if (textLength == 4) {
+            count4.getAndIncrement();
+        } else {
+            count5.getAndIncrement();
+        }
+    }
 }
